@@ -20,7 +20,7 @@ Ce projet montre comment générer des schémas professionnels d'architecture cl
 
 ---
 
-## regarde le documentation 
+## regarde la documentation 
 
 - [diagrams](https://diagrams.mingrammer.com/docs)
 

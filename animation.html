@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Cloud IDOSR - Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+        }
+        
+        button {
+            background-color: #0078D4;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #106EBE;
+        }
+        
+        button.active {
+            background-color: #004578;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .diagram-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 20px;
+            margin-top: 10px;
+            width: 90%;
+            max-width: 1200px;
+            overflow: auto;
+        }
+        
+        svg {
+            width: 100%;
+            height: auto;
+        }
+        
+        .process-description {
+            margin: 20px auto;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 80%;
+            max-width: 800px;
+        }
+        
+        h1 {
+            color: #0078D4;
+            text-align: center;
+        }
+        
+        h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            margin-right: 8px;
+        }
+        
+        /* Animation classes */
+        .data-particle {
+            fill: #fff;
+            r: 5;
+            filter: url(#glow);
+        }
+        
+        .glow-http {
+            fill: #1976D2;
+        }
+        
+        .glow-sql {
+            fill: #43A047;
+        }
+        
+        .glow-backup {
+            fill: #D32F2F;
+        }
+        
+        .glow-smb {
+            fill: #7B1FA2;
+        }
+        
+        /* Path styles */
+        .path-http {
+            stroke: #1976D2;
+            stroke-width: 2;
+        }
+        
+        .path-host {
+            stroke: #FFA000;
+            stroke-width: 1.5;
+        }
+        
+        .path-sql {
+            stroke: #43A047;
+            stroke-width: 1.5;
+        }
+        
+        .path-sql-return {
+            stroke: #43A047;
+            stroke-width: 1.5;
+            stroke-dasharray: 4 2;
+        }
+        
+        .path-http-return {
+            stroke: #1976D2;
+            stroke-width: 1.5;
+            stroke-dasharray: 4 2;
+        }
+        
+        .path-backup {
+            stroke: #D32F2F;
+            stroke-width: 2;
+        }
+        
+        .path-smb {
+            stroke: #7B1FA2;
+            stroke-width: 1.5;
+            stroke-dasharray: 2 2;
+        }
+        
+        /* Component boxes */
+        .component {
+            rx: 10;
+            ry: 10;
+            stroke-width: 2;
+            fill-opacity: 0.2;
+        }
+        
+        .component-user {
+            fill: #E8F5E9;
+            stroke: #2E7D32;
+        }
+        
+        .component-web {
+            fill: #FFF3E0;
+            stroke: #E65100;
+        }
+        
+        .component-db {
+            fill: #F3E5F5;
+            stroke: #6A1B9A;
+        }
+        
+        .component-storage {
+            fill: #E8EAF6;
+            stroke: #283593;
+        }
+        
+        .component-network {
+            fill: #E0F7FA;
+            stroke: #00838F;
+        }
+        
+        .component-azure {
+            fill: #E3F2FD;
+            stroke: #1565C0;
+        }
+        
+        .process-item {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            border-left: 3px solid #0078D4;
+        }
+
+        .step-title {
+            font-weight: bold;
+            color: #0078D4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Architecture Cloud et Flux de Données IDOSR</h1>
+    
+    <div class="controls">
+        <h3>Contrôles de Simulation</h3>
+        <button id="btnFullProcess">Processus Complet</button>
+        <button id="btnWebRequest">Requête Web</button>
+        <button id="btnDbQuery">Requête SQL</button>
+        <button id="btnBackup">Sauvegarde</button>
+        <button id="btnStop">Arrêter</button>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #1976D2;"></div>
+                <span>Trafic HTTP</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #43A047;"></div>
+                <span>Requêtes SQL</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #D32F2F;"></div>
+                <span>Sauvegarde</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #7B1FA2; height: 2px; border-top: 2px dotted #7B1FA2;"></div>
+                <span>Montage SMB</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="diagram-container">
+        <svg id="architecture" viewBox="0 0 800 500">
+            <defs>
+                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="2.5" result="blur" />
+                    <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+                
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5"
+                    markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#777" />
+                </marker>
+            </defs>
+            
+            <!-- Azure Cloud Box -->
+            <rect x="100" y="70" width="660" height="410" class="component component-azure" />
+            <text x="430" y="90" text-anchor="middle" font-weight="bold">Microsoft Azure</text>
+            
+            <!-- Network Box -->
+            <rect x="120" y="100" width="620" height="360" class="component component-network" />
+            <text x="430" y="120" text-anchor="middle" font-weight="bold">Réseau Virtuel (VNet)</text>
+            
+            <!-- User Box -->
+            <rect x="20" y="180" width="100" height="100" class="component component-user" />
+            <text x="70" y="200" text-anchor="middle" font-weight="bold">Utilisateurs</text>
+            
+            <!-- Web Tier Box -->
+            <rect x="160" y="160" width="180" height="170" class="component component-web" />
+            <text x="250" y="180" text-anchor="middle" font-weight="bold">Tier Web - DMZ</text>
+            
+            <!-- Database Tier Box -->
+            <rect x="460" y="160" width="180" height="170" class="component component-db" />
+            <text x="550" y="180" text-anchor="middle" font-weight="bold">Tier Base de Données</text>
+            
+            <!-- Storage Tier Box -->
+            <rect x="400" y="360" width="180" height="80" class="component component-storage" />
+            <text x="490" y="380" text-anchor="middle" font-weight="bold">Tier Stockage</text>
+            
+            <!-- Components -->
+            <!-- Client -->
+            <circle id="client" cx="70" cy="230" r="20" fill="#81C784" stroke="#2E7D32" stroke-width="2" />
+            <text x="70" y="275" text-anchor="middle" font-size="12">Navigateur Web</text>
+            
+            <!-- VM Web -->
+            <rect id="vm-web" x="180" y="200" width="40" height="40" rx="5" ry="5" fill="#FFB74D" stroke="#E65100" stroke-width="2" />
+            <text x="200" y="255" text-anchor="middle" font-size="12">VM-WEB</text>
+            
+            <!-- Apache -->
+            <rect id="apache" x="260" y="200" width="40" height="40" rx="5" ry="5" fill="#FFB74D" stroke="#E65100" stroke-width="2" />
+            <text x="280" y="255" text-anchor="middle" font-size="12">Apache+PHP</text>
+            
+            <!-- VNet Peering -->
+            <circle id="peering" cx="350" cy="270" r="20" fill="#80DEEA" stroke="#00838F" stroke-width="2" />
+            <text x="350" y="310" text-anchor="middle" font-size="12">VNet Peering</text>
+            
+            <!-- VM DB -->
+            <rect id="vm-db" x="480" y="200" width="40" height="40" rx="5" ry="5" fill="#CE93D8" stroke="#6A1B9A" stroke-width="2" />
+            <text x="500" y="255" text-anchor="middle" font-size="12">VM-BD</text>
+            
+            <!-- MySQL -->
+            <rect id="mysql" x="560" y="200" width="40" height="40" rx="5" ry="5" fill="#CE93D8" stroke="#6A1B9A" stroke-width="2" />
+            <text x="580" y="255" text-anchor="middle" font-size="12">MySQL</text>
+            
+            <!-- Storage -->
+            <rect id="storage" x="460" y="390" width="60" height="30" rx="5" ry="5" fill="#9FA8DA" stroke="#283593" stroke-width="2" />
+            <text x="490" y="435" text-anchor="middle" font-size="12">Storage Account</text>
+            
+            <!-- Paths -->
+            <!-- HTTP Request Path -->
+            <path id="path-http-request" d="M 90,230 L 180,220" fill="none" class="path-http" marker-end="url(#arrow)" />
+            <text x="135" y="215" font-size="10" text-anchor="middle">HTTP(S)</text>
+            
+            <!-- Host Relationship -->
+            <path id="path-host" d="M 220,220 L 260,220" fill="none" class="path-host" marker-end="url(#arrow)" />
+            <text x="240" y="215" font-size="10" text-anchor="middle">Héberge</text>
+            
+            <!-- SQL Request Path -->
+            <path id="path-sql-request" d="M 300,220 C 320,220 330,270 350,270" fill="none" class="path-sql" marker-end="url(#arrow)" />
+            <text x="325" y="240" font-size="10" text-anchor="middle">Requêtes SQL</text>
+            
+            <!-- SQL to DB Path -->
+            <path id="path-sql-to-db" d="M 370,270 C 400,270 420,220 480,220" fill="none" class="path-sql" marker-end="url(#arrow)" />
+            
+            <!-- SQL to MySQL Path -->
+            <path id="path-db-to-mysql" d="M 520,220 L 560,220" fill="none" class="path-sql" marker-end="url(#arrow)" />
+            
+            <!-- SQL Return Path -->
+            <path id="path-sql-return" d="M 560,230 L 520,230" fill="none" class="path-sql-return" marker-end="url(#arrow)" />
+            
+            <!-- SQL Return to Peering -->
+            <path id="path-mysql-to-peering" d="M 480,230 C 420,230 400,280 370,280" fill="none" class="path-sql-return" marker-end="url(#arrow)" />
+            
+            <!-- Peering Return to Apache -->
+            <path id="path-peering-to-apache" d="M 350,280 C 330,280 320,230 300,230" fill="none" class="path-sql-return" marker-end="url(#arrow)" />
+            <text x="325" y="300" font-size="10" text-anchor="middle">Réponses SQL</text>
+            
+            <!-- HTTP Response Path -->
+            <path id="path-http-response" d="M 260,230 L 220,230" fill="none" class="path-http-return" marker-end="url(#arrow)" />
+            
+            <!-- Apache to Client Response -->
+            <path id="path-apache-to-client" d="M 180,230 L 90,240" fill="none" class="path-http-return" marker-end="url(#arrow)" />
+            <text x="135" y="245" font-size="10" text-anchor="middle">Réponse HTTP</text>
+            
+            <!-- Backup Path -->
+            <path id="path-backup" d="M 580,240 C 580,350 550,390 520,390" fill="none" class="path-backup" marker-end="url(#arrow)" />
+            <text x="590" y="320" font-size="10" text-anchor="middle">Sauvegarde quotidienne</text>
+            
+            <!-- SMB Path -->
+            <path id="path-smb" d="M 500,240 C 500,320 490,390 460,390" fill="none" class="path-smb" marker-end="url(#arrow)" />
+            <text x="470" y="320" font-size="10" text-anchor="middle">Montage SMB</text>
+        </svg>
+    </div>
+    
+    <div class="process-description">
+        <h3>Flux de Données Simulés</h3>
+        
+        <div class="process-item">
+            <div class="step-title">1. Requête Web</div>
+            <p>Le navigateur client envoie une requête HTTP/HTTPS (port 80/443) à la VM Web dans la DMZ d'Azure. Apache avec PHP traite cette requête initiale.</p>
+        </div>
+        
+        <div class="process-item">
+            <div class="step-title">2. Requête de Base de Données</div>
+            <p>Le serveur web (Apache+PHP) génère des requêtes SQL qui transitent via le VNet peering pour atteindre le serveur MySQL. Les données sont renvoyées par le même chemin vers l'application web.</p>
+        </div>
+        
+        <div class="process-item">
+            <div class="step-title">3. Réponse au Client</div>
+            <p>Une fois les données traitées, le serveur web renvoie la page HTML générée au navigateur client via une réponse HTTP.</p>
+        </div>
+        
+        <div class="process-item">
+            <div class="step-title">4. Processus de Sauvegarde</div>
+            <p>Chaque jour à 02:00 UTC, un script cron exécute une sauvegarde de la base de données MySQL vers le Storage Account Azure pour assurer la persistance et la sécurité des données.</p>
+        </div>
+        
+        <div class="process-item">
+            <div class="step-title">5. Montage SMB</div>
+            <p>La VM de base de données maintient une connexion SMB permanente avec le Storage Account permettant une sauvegarde rapide et un accès aux données stockées.</p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const svg = document.getElementById('architecture');
+            let animationIntervals = [];
+            const buttons = document.querySelectorAll('button');
+            
+            // Helper function to create SVG element
+            function createSVGElement(type) {
+                return document.createElementNS("http://www.w3.org/2000/svg", type);
+            }
+            
+            // Function to create and animate a particle along a path
+            function animateAlongPath(pathId, particleClass, duration, delay = 0, repeat = true) {
+                const path = document.getElementById(pathId);
+                const pathLength = path.getTotalLength();
+                
+                const particle = createSVGElement('circle');
+                particle.setAttribute('class', 'data-particle ' + particleClass);
+                svg.appendChild(particle);
+                
+                let start = null;
+                let progress = 0;
+                
+                const intervalId = setInterval(() => {
+                    if (start === null) {
+                        start = Date.now() + delay;
+                    }
+                    
+                    const now = Date.now();
+                    if (now < start) return;
+                    
+                    progress = (now - start) / duration;
+                    
+                    if (progress >= 1) {
+                        if (repeat) {
+                            start = null;
+                        } else {
+                            clearInterval(intervalId);
+                            svg.removeChild(particle);
+                            return;
+                        }
+                    }
+                    
+                    const point = path.getPointAtLength(progress % 1 * pathLength);
+                    particle.setAttribute('cx', point.x);
+                    particle.setAttribute('cy', point.y);
+                }, 16);
+                
+                return intervalId;
+            }
+            
+            // Function to highlight a component
+            function highlightComponent(id, duration) {
+                const component = document.getElementById(id);
+                const originalStroke = component.getAttribute('stroke');
+                const originalStrokeWidth = component.getAttribute('stroke-width');
+                
+                component.setAttribute('stroke', '#FFD700');
+                component.setAttribute('stroke-width', '3');
+                
+                setTimeout(() => {
+                    component.setAttribute('stroke', originalStroke);
+                    component.setAttribute('stroke-width', originalStrokeWidth);
+                }, duration);
+            }
+            
+            // Function to stop all animations
+            function stopAllAnimations() {
+                animationIntervals.forEach(interval => clearInterval(interval));
+                animationIntervals = [];
+                
+                // Remove all particles
+                const particles = svg.querySelectorAll('.data-particle');
+                particles.forEach(p => p.remove());
+                
+                // Reset button states
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.disabled = false;
+                });
+            }
+            
+            // Web request animation
+            function animateWebRequest() {
+                highlightComponent('client', 1000);
+                setTimeout(() => highlightComponent('vm-web', 1000), 1000);
+                setTimeout(() => highlightComponent('apache', 1000), 2000);
+                
+                const intervals = [
+                    animateAlongPath('path-http-request', 'glow-http', 2000),
+                    setTimeout(() => animateAlongPath('path-host', 'glow-http', 1000), 2000),
+                    setTimeout(() => animateAlongPath('path-http-response', 'glow-http', 1000, 0, false), 8000),
+                    setTimeout(() => animateAlongPath('path-apache-to-client', 'glow-http', 2000, 0, false), 9000)
+                ];
+                
+                return intervals;
+            }
+            
+            // Database query animation
+            function animateDatabaseQuery() {
+                highlightComponent('apache', 1000);
+                setTimeout(() => highlightComponent('peering', 1000), 1000);
+                setTimeout(() => highlightComponent('vm-db', 1000), 2000);
+                setTimeout(() => highlightComponent('mysql', 1000), 3000);
+                
+                const intervals = [
+                    animateAlongPath('path-sql-request', 'glow-sql', 1500),
+                    setTimeout(() => animateAlongPath('path-sql-to-db', 'glow-sql', 1500), 1500),
+                    setTimeout(() => animateAlongPath('path-db-to-mysql', 'glow-sql', 1000), 3000),
+                    setTimeout(() => animateAlongPath('path-sql-return', 'glow-sql', 1000), 4000),
+                    setTimeout(() => animateAlongPath('path-mysql-to-peering', 'glow-sql', 1500), 5000),
+                    setTimeout(() => animateAlongPath('path-peering-to-apache', 'glow-sql', 1500), 6500)
+                ];
+                
+                return intervals;
+            }
+            
+            // Backup animation
+            function animateBackup() {
+                highlightComponent('mysql', 1000);
+                setTimeout(() => highlightComponent('storage', 1000), 2000);
+                
+                const intervals = [
+                    animateAlongPath('path-backup', 'glow-backup', 3000, 0, false),
+                    animateAlongPath('path-smb', 'glow-smb', 5000, 0, true)
+                ];
+                
+                return intervals;
+            }
+            
+            // Button event listeners
+            document.getElementById('btnWebRequest').addEventListener('click', function() {
+                stopAllAnimations();
+                this.classList.add('active');
+                this.disabled = true;
+                animationIntervals = animateWebRequest();
+            });
+            
+            document.getElementById('btnDbQuery').addEventListener('click', function() {
+                stopAllAnimations();
+                this.classList.add('active');
+                this.disabled = true;
+                animationIntervals = animateDatabaseQuery();
+            });
+            
+            document.getElementById('btnBackup').addEventListener('click', function() {
+                stopAllAnimations();
+                this.classList.add('active');
+                this.disabled = true;
+                animationIntervals = animateBackup();
+            });
+            
+            document.getElementById('btnFullProcess').addEventListener('click', function() {
+                stopAllAnimations();
+                this.classList.add('active');
+                this.disabled = true;
+                
+                const webIntervals = animateWebRequest();
+                
+                setTimeout(() => {
+                    animationIntervals = animationIntervals.concat(animateDatabaseQuery());
+                }, 4000);
+                
+                setTimeout(() => {
+                    animationIntervals = animationIntervals.concat(animateBackup());
+                }, 12000);
+                
+                animationIntervals = animationIntervals.concat(webIntervals);
+            });
+            
+            document.getElementById('btnStop').addEventListener('click', stopAllAnimations);
+        });
+    </script>
+</body>
+</html>
