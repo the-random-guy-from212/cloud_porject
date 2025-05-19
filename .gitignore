@@ -1,0 +1,26 @@
+/venv 
+venv/
+# Python virtual environment
+venv/
+.env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VSCode settings (optional)
+.vscode/
+
+# macOS
+.DS_Store
+
+# Environment variables file
+.env
+*.env
+
+# Logs
+*.log
